@@ -583,7 +583,7 @@ async def delete_user(user_id: str, current_user: User = Depends(require_admin))
 async def get_archived_users(current_user: User = Depends(require_admin)):
     """Admin lista usuários arquivados"""
     users = await db.users.find({"archived": True}, {"_id": 0, "password": 0}).to_list(1000)
-    return users
+    return users if users else []
 
 
 
