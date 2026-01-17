@@ -320,7 +320,7 @@ async def get_bonus(user_id: str, month: str, current_user: User = Depends(get_c
             {"faixa": "100k+", "tpv_min": 100000, "bonus_per_client": 400, "meta_min_clients": 2, "clients_count": 0},
             {"faixa": "200k+", "tpv_min": 200000, "bonus_per_client": 800, "meta_min_clients": 1, "clients_count": 0}
         ]
-        bonus = {
+        bonus_doc = {
             "id": str(uuid.uuid4()),
             "user_id": user_id,
             "month": month,
@@ -330,7 +330,8 @@ async def get_bonus(user_id: str, month: str, current_user: User = Depends(get_c
             "bonus_final": 0.0,
             "updated_at": datetime.now(timezone.utc).isoformat()
         }
-        await db.bonus.insert_one(bonus)
+        await db.bonus.insert_one(bonus_doc)
+        bonus = await db.bonus.find_one({"user_id": user_id, "month": month}, {"_id": 0})
     return bonus
 
 @api_router.put("/bonus/{user_id}/{month}")
