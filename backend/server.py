@@ -391,7 +391,7 @@ async def get_extrato(user_id: str, month: str, current_user: User = Depends(get
     extrato = await db.extrato.find_one({"user_id": user_id, "month": month}, {"_id": 0})
     if not extrato:
         import uuid
-        extrato = {
+        extrato_doc = {
             "id": str(uuid.uuid4()),
             "user_id": user_id,
             "month": month,
@@ -400,7 +400,8 @@ async def get_extrato(user_id: str, month: str, current_user: User = Depends(get
             "historico_semestral": [],
             "created_at": datetime.now(timezone.utc).isoformat()
         }
-        await db.extrato.insert_one(extrato)
+        await db.extrato.insert_one(extrato_doc)
+        extrato = await db.extrato.find_one({"user_id": user_id, "month": month}, {"_id": 0})
     return extrato
 
 @api_router.post("/dre/{user_id}")
