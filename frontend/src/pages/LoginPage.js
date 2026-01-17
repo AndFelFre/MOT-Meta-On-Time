@@ -22,8 +22,14 @@ export default function LoginPage() {
     const result = await login(loginData.email, loginData.password);
     setLoading(false);
     if (result.success) {
-      toast.success('✅ Login realizado com sucesso!');
-      navigate('/dashboard');
+      // Se for primeiro login, redirecionar para troca de senha
+      if (result.first_login || result.temporary_password) {
+        toast.info('⚠️ Você precisa alterar sua senha temporária');
+        navigate('/first-login-password-change');
+      } else {
+        toast.success('✅ Login realizado com sucesso!');
+        navigate('/dashboard');
+      }
     } else {
       toast.error(result.error);
     }
