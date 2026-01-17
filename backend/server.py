@@ -49,6 +49,8 @@ class User(BaseModel):
     active_base: int = 159
     time_in_company: int = 0
     archived: bool = False
+    first_login: bool = True
+    temporary_password: bool = False
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     updated_at: Optional[datetime] = None
 
