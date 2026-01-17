@@ -272,7 +272,7 @@ class MOTAPITester:
                 self.log_result("Competencias Operations", True)
                 return True
             else:
-                self.log_result("Competencias Operations", False, f"Expected media: {expected_media}, Got: {actual_media}")
+                self.log_result("Competencias Operations", False, f"Get: {get_success}, Expected media: {expected_media}, Got: {actual_media}")
                 return False
         else:
             self.log_result("Competencias Operations", False, f"Update failed: {status}")
