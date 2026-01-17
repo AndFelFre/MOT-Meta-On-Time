@@ -553,7 +553,7 @@ async def get_dashboard(user_id: str, current_user: User = Depends(get_current_u
     
     if not kpi:
         import uuid
-        kpi = {
+        kpi_doc = {
             "id": str(uuid.uuid4()),
             "user_id": user_id,
             "month": current_month,
@@ -569,7 +569,8 @@ async def get_dashboard(user_id: str, current_user: User = Depends(get_current_u
             "migracao_hunter_realizado": 0.0,
             "updated_at": datetime.now(timezone.utc).isoformat()
         }
-        await db.kpis.insert_one(kpi)
+        await db.kpis.insert_one(kpi_doc)
+        kpi = await db.kpis.find_one({"user_id": user_id, "month": current_month}, {"_id": 0})
     
     return {
         "user": user,
