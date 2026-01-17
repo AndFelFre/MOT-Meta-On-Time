@@ -339,6 +339,69 @@ async def get_me(current_user: User = Depends(get_current_user)):
 @api_router.get("/users")
 async def get_users(include_archived: bool = False, current_user: User = Depends(require_admin)):
     """Admin lista usuários ativos (ou todos se include_archived=true)"""
+
+
+@api_router.post("/auth/first-login-password-change")
+async def first_login_password_change(
+    password_data: FirstLoginPasswordChange,
+    current_user: User = Depends(get_current_user)
+):
+    """Troca de senha obrigatória no primeiro acesso"""
+    if not current_user.first_login:
+        raise HTTPException(status_code=400, detail="Usuário já completou o primeiro acesso")
+    
+    # Validar nova senha (mínimo 6 caracteres)
+    if len(password_data.new_password) < 6:
+        raise HTTPException(status_code=400, detail="Senha deve ter no mínimo 6 caracteres")
+    
+    # Atualizar senha e marcar first_login como False
+    new_hashed_pw = hash_password(password_data.new_password)
+    await db.users.update_one(
+        {"id": current_user.id},
+        {
+            "$set": {
+                "password": new_hashed_pw,
+                "first_login": False,
+                "temporary_password": False,
+                "updated_at": datetime.now(timezone.utc).isoformat()
+            }
+        }
+    )
+    
+    return {"message": "Senha alterada com sucesso. Você pode continuar usando o sistema."}
+
+@api_router.post("/auth/change-password")
+async def change_password(
+    password_data: ChangePassword,
+    current_user: User = Depends(get_current_user)
+):
+    """Troca de senha normal (após primeiro acesso)"""
+    user = await db.users.find_one({"id": current_user.id}, {"_id": 0})
+    if not user:
+        raise HTTPException(status_code=404, detail="Usuário não encontrado")
+    
+    # Verificar senha antiga
+    if not verify_password(password_data.old_password, user["password"]):
+        raise HTTPException(status_code=401, detail="Senha antiga incorreta")
+    
+    # Validar nova senha
+    if len(password_data.new_password) < 6:
+        raise HTTPException(status_code=400, detail="Senha deve ter no mínimo 6 caracteres")
+    
+    # Atualizar senha
+    new_hashed_pw = hash_password(password_data.new_password)
+    await db.users.update_one(
+        {"id": current_user.id},
+        {
+            "$set": {
+                "password": new_hashed_pw,
+                "updated_at": datetime.now(timezone.utc).isoformat()
+            }
+        }
+    )
+    
+    return {"message": "Senha alterada com sucesso"}
+
     query = {} if include_archived else {"archived": {"$ne": True}}
     users = await db.users.find(query, {"_id": 0, "password": 0}).to_list(1000)
     return users
