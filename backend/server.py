@@ -238,11 +238,13 @@ async def register(user_data: UserCreate):
         "email": user_data.email,
         "password": hashed_pw,
         "role": user_data.role.value if hasattr(user_data.role, 'value') else user_data.role,
-        "career_level": CareerLevel.RECRUTA.value,
-        "base_salary": 1570.0,
-        "active_base": 159,
-        "time_in_company": 0,
-        "created_at": datetime.now(timezone.utc).isoformat()
+        "career_level": user_data.career_level.value if hasattr(user_data.career_level, 'value') else user_data.career_level,
+        "base_salary": user_data.base_salary,
+        "active_base": user_data.active_base,
+        "time_in_company": user_data.time_in_company,
+        "archived": False,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "updated_at": None
     }
     
     result = await db.users.insert_one(user_doc)
