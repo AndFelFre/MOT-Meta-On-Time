@@ -110,8 +110,17 @@ export default function UserManagementPage() {
 
   const handleCreateUser = async () => {
     try {
-      await api.post('/users', formData);
-      toast.success('✅ Usuário criado com sucesso!');
+      const response = await api.post('/users', formData);
+      
+      let successMessage = '✅ Usuário criado com sucesso!';
+      if (response.data.email_sent) {
+        successMessage += ' Email de boas-vindas enviado.';
+      }
+      if (response.data.temporary_password) {
+        successMessage += ' Senha temporária gerada.';
+      }
+      
+      toast.success(successMessage);
       setOpenCreateModal(false);
       resetForm();
       fetchUsers();
