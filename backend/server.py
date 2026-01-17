@@ -272,7 +272,7 @@ async def get_kpi(user_id: str, month: str, current_user: User = Depends(get_cur
     kpi = await db.kpis.find_one({"user_id": user_id, "month": month}, {"_id": 0})
     if not kpi:
         import uuid
-        kpi = {
+        kpi_doc = {
             "id": str(uuid.uuid4()),
             "user_id": user_id,
             "month": month,
@@ -288,7 +288,8 @@ async def get_kpi(user_id: str, month: str, current_user: User = Depends(get_cur
             "migracao_hunter_realizado": 0.0,
             "updated_at": datetime.now(timezone.utc).isoformat()
         }
-        await db.kpis.insert_one(kpi)
+        await db.kpis.insert_one(kpi_doc)
+        kpi = await db.kpis.find_one({"user_id": user_id, "month": month}, {"_id": 0})
     return kpi
 
 @api_router.put("/kpis/{user_id}/{month}")
