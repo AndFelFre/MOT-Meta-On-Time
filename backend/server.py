@@ -497,7 +497,7 @@ async def get_competencias(user_id: str, current_user: User = Depends(get_curren
     comp = await db.competencias.find_one({"user_id": user_id}, {"_id": 0})
     if not comp:
         import uuid
-        comp = {
+        comp_doc = {
             "id": str(uuid.uuid4()),
             "user_id": user_id,
             "persistencia": 3,
@@ -508,7 +508,8 @@ async def get_competencias(user_id: str, current_user: User = Depends(get_curren
             "media": 3.0,
             "updated_at": datetime.now(timezone.utc).isoformat()
         }
-        await db.competencias.insert_one(comp)
+        await db.competencias.insert_one(comp_doc)
+        comp = await db.competencias.find_one({"user_id": user_id}, {"_id": 0})
     return comp
 
 @api_router.put("/competencias/{user_id}")
