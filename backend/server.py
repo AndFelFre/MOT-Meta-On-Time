@@ -57,6 +57,20 @@ class UserCreate(BaseModel):
     email: EmailStr
     password: str
     role: UserRole = UserRole.AGENT
+    career_level: CareerLevel = CareerLevel.RECRUTA
+    base_salary: float = 1570.0
+    active_base: int = 159
+    time_in_company: int = 0
+
+class UserUpdate(BaseModel):
+    name: Optional[str] = None
+    email: Optional[EmailStr] = None
+    password: Optional[str] = None
+    role: Optional[UserRole] = None
+    career_level: Optional[CareerLevel] = None
+    base_salary: Optional[float] = None
+    active_base: Optional[int] = None
+    time_in_company: Optional[int] = None
 
 class UserLogin(BaseModel):
     email: EmailStr
