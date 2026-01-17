@@ -4,6 +4,7 @@ import { AuthProvider, useAuth } from '@/contexts/AuthContext';
 import { ThemeProvider } from '@/contexts/ThemeContext';
 import { Toaster } from '@/components/ui/sonner';
 import LoginPage from '@/pages/LoginPage';
+import FirstLoginPasswordChangePage from '@/pages/FirstLoginPasswordChangePage';
 import DashboardPage from '@/pages/DashboardPage';
 import DashboardPageV2 from '@/pages/DashboardPageV2';
 import BonusPage from '@/pages/BonusPage';
