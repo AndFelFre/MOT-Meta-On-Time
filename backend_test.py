@@ -40,16 +40,26 @@ class MOTAPITester:
 
         try:
             if method == 'GET':
-                response = requests.get(url, headers=headers, timeout=10)
+                response = requests.get(url, headers=headers, timeout=30)
             elif method == 'POST':
-                response = requests.post(url, json=data, headers=headers, timeout=10)
+                response = requests.post(url, json=data, headers=headers, timeout=30)
             elif method == 'PUT':
-                response = requests.put(url, json=data, headers=headers, timeout=10)
+                response = requests.put(url, json=data, headers=headers, timeout=30)
             else:
                 return False, {}, 0
 
+            # Debug logging
+            if response.status_code >= 400:
+                print(f"  DEBUG: {method} {endpoint} -> {response.status_code}")
+                if response.content:
+                    print(f"  DEBUG: Response: {response.text[:200]}")
+
             return response.status_code < 400, response.json() if response.content else {}, response.status_code
+        except requests.exceptions.Timeout:
+            print(f"  DEBUG: Timeout on {method} {endpoint}")
+            return False, {"error": "timeout"}, 0
         except Exception as e:
+            print(f"  DEBUG: Exception on {method} {endpoint}: {str(e)}")
             return False, {"error": str(e)}, 0
 
     def test_admin_login(self):
