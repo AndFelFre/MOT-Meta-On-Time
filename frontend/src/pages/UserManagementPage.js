@@ -68,6 +68,8 @@ export default function UserManagementPage() {
     base_salary: 1570.0,
     active_base: 159,
     time_in_company: 0,
+    send_welcome_email: false,
+    generate_temp_password: false,
   });
 
   useEffect(() => {
