@@ -237,7 +237,7 @@ class MOTAPITester:
                 self.log_result("Forecast Operations", True)
                 return True
             else:
-                self.log_result("Forecast Operations", False, f"Conversions: {conv_qualif_proposta}, {conv_proposta_cliente}, {conv_cliente_ativo}")
+                self.log_result("Forecast Operations", False, f"Get: {get_success}, Conversions: {conv_qualif_proposta}, {conv_proposta_cliente}, {conv_cliente_ativo}")
                 return False
         else:
             self.log_result("Forecast Operations", False, f"Update failed: {status}")
