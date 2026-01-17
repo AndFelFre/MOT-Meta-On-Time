@@ -345,7 +345,7 @@ async def get_user(user_id: str, current_user: User = Depends(get_current_user))
 
 @api_router.post("/users")
 async def create_user(user_data: UserCreate, current_user: User = Depends(require_admin)):
-    """Admin cria novo usuário (agent)"""
+    """Admin cria novo usuário (agent) com onboarding opcional"""
     # Verificar se email já existe
     existing = await db.users.find_one({"email": user_data.email}, {"_id": 0})
     if existing:
@@ -353,7 +353,17 @@ async def create_user(user_data: UserCreate, current_user: User = Depends(requir
     
     import uuid
     user_id = str(uuid.uuid4())
-    hashed_pw = hash_password(user_data.password)
+    
+    # Determinar senha (temporária ou definida)
+    if user_data.generate_temp_password:
+        temp_password = generate_temporary_password()
+        hashed_pw = hash_password(temp_password)
+        is_temp = True
+        password_to_send = temp_password
+    else:
+        hashed_pw = hash_password(user_data.password)
+        is_temp = False
+        password_to_send = user_data.password
     
     user_doc = {
         "id": user_id,
@@ -366,6 +376,8 @@ async def create_user(user_data: UserCreate, current_user: User = Depends(requir
         "active_base": user_data.active_base,
         "time_in_company": user_data.time_in_company,
         "archived": False,
+        "first_login": True,
+        "temporary_password": is_temp,
         "created_at": datetime.now(timezone.utc).isoformat(),
         "updated_at": None
     }
@@ -373,7 +385,26 @@ async def create_user(user_data: UserCreate, current_user: User = Depends(requir
     await db.users.insert_one(user_doc)
     created_user = await db.users.find_one({"id": user_id}, {"_id": 0, "password": 0})
     
-    return {"message": "Usuário criado com sucesso", "user": created_user}
+    # Enviar email de boas-vindas se solicitado
+    email_result = None
+    if user_data.send_welcome_email:
+        email_result = await send_welcome_email(
+            user_data.name,
+            user_data.email,
+            password_to_send,
+            is_temp
+        )
+    
+    return {
+        "message": "Usuário criado com sucesso",
+        "user": created_user,
+        "email_sent": user_data.send_welcome_email,
+        "temporary_password": is_temp,
+        "onboarding_info": {
+            "email_sent": user_data.send_welcome_email,
+            "needs_password_change": is_temp
+        }
+    }
 
 @api_router.put("/users/{user_id}")
 async def update_user(user_id: str, update_data: UserUpdate, current_user: User = Depends(require_admin)):
