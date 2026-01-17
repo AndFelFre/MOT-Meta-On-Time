@@ -457,6 +457,46 @@ export default function UserManagementPage() {
                 fullWidth
                 data-testid="create-time-input"
               />
+              
+              <Divider sx={{ my: 2 }} />
+              
+              <Typography variant="subtitle2" fontWeight={600} mb={1}>
+                🎉 Sistema de Onboarding
+              </Typography>
+              
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={formData.generate_temp_password}
+                    onChange={(e) => setFormData({ ...formData, generate_temp_password: e.target.checked, password: '' })}
+                    data-testid="generate-temp-password-checkbox"
+                  />
+                }
+                label="Gerar senha temporária automaticamente"
+              />
+              
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={formData.send_welcome_email}
+                    onChange={(e) => setFormData({ ...formData, send_welcome_email: e.target.checked })}
+                    data-testid="send-welcome-email-checkbox"
+                  />
+                }
+                label="Enviar email de boas-vindas com credenciais"
+              />
+              
+              {formData.generate_temp_password && (
+                <Alert severity="info" sx={{ mt: 1 }}>
+                  Uma senha temporária será gerada e enviada ao usuário. Ele deverá alterá-la no primeiro acesso.
+                </Alert>
+              )}
+              
+              {formData.send_welcome_email && (
+                <Alert severity="success" sx={{ mt: 1 }}>
+                  Um email de boas-vindas será enviado para {formData.email || 'o novo usuário'} com as credenciais de acesso.
+                </Alert>
+              )}
             </Box>
           </DialogContent>
           <DialogActions>
