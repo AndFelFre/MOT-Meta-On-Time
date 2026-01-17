@@ -282,6 +282,142 @@ async def get_user(user_id: str, current_user: User = Depends(get_current_user))
         raise HTTPException(status_code=404, detail="Usuário não encontrado")
     return user
 
+@api_router.post("/users")
+async def create_user(user_data: UserCreate, current_user: User = Depends(require_admin)):
+    """Admin cria novo usuário (agent)"""
+    # Verificar se email já existe
+    existing = await db.users.find_one({"email": user_data.email}, {"_id": 0})
+    if existing:
+        raise HTTPException(status_code=400, detail="Email já cadastrado")
+    
+    import uuid
+    user_id = str(uuid.uuid4())
+    hashed_pw = hash_password(user_data.password)
+    
+    user_doc = {
+        "id": user_id,
+        "name": user_data.name,
+        "email": user_data.email,
+        "password": hashed_pw,
+        "role": user_data.role.value if hasattr(user_data.role, 'value') else user_data.role,
+        "career_level": user_data.career_level.value if hasattr(user_data.career_level, 'value') else user_data.career_level,
+        "base_salary": user_data.base_salary,
+        "active_base": user_data.active_base,
+        "time_in_company": user_data.time_in_company,
+        "archived": False,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "updated_at": None
+    }
+    
+    await db.users.insert_one(user_doc)
+    created_user = await db.users.find_one({"id": user_id}, {"_id": 0, "password": 0})
+    
+    return {"message": "Usuário criado com sucesso", "user": created_user}
+
+@api_router.put("/users/{user_id}")
+async def update_user(user_id: str, update_data: UserUpdate, current_user: User = Depends(require_admin)):
+    """Admin atualiza dados de usuário"""
+    user = await db.users.find_one({"id": user_id}, {"_id": 0})
+    if not user:
+        raise HTTPException(status_code=404, detail="Usuário não encontrado")
+    
+    # Construir update document
+    update_dict = {}
+    if update_data.name is not None:
+        update_dict["name"] = update_data.name
+    if update_data.email is not None:
+        # Verificar se email já existe em outro usuário
+        existing = await db.users.find_one({"email": update_data.email, "id": {"$ne": user_id}}, {"_id": 0})
+        if existing:
+            raise HTTPException(status_code=400, detail="Email já cadastrado por outro usuário")
+        update_dict["email"] = update_data.email
+    if update_data.password is not None:
+        update_dict["password"] = hash_password(update_data.password)
+    if update_data.role is not None:
+        update_dict["role"] = update_data.role.value if hasattr(update_data.role, 'value') else update_data.role
+    if update_data.career_level is not None:
+        update_dict["career_level"] = update_data.career_level.value if hasattr(update_data.career_level, 'value') else update_data.career_level
+    if update_data.base_salary is not None:
+        update_dict["base_salary"] = update_data.base_salary
+    if update_data.active_base is not None:
+        update_dict["active_base"] = update_data.active_base
+    if update_data.time_in_company is not None:
+        update_dict["time_in_company"] = update_data.time_in_company
+    
+    if not update_dict:
+        raise HTTPException(status_code=400, detail="Nenhum dado para atualizar")
+    
+    update_dict["updated_at"] = datetime.now(timezone.utc).isoformat()
+    
+    await db.users.update_one({"id": user_id}, {"$set": update_dict})
+    updated_user = await db.users.find_one({"id": user_id}, {"_id": 0, "password": 0})
+    
+    return {"message": "Usuário atualizado com sucesso", "user": updated_user}
+
+@api_router.patch("/users/{user_id}/archive")
+async def archive_user(user_id: str, current_user: User = Depends(require_admin)):
+    """Admin arquiva usuário (soft delete)"""
+    user = await db.users.find_one({"id": user_id}, {"_id": 0})
+    if not user:
+        raise HTTPException(status_code=404, detail="Usuário não encontrado")
+    
+    if user.get("archived", False):
+        raise HTTPException(status_code=400, detail="Usuário já está arquivado")
+    
+    await db.users.update_one(
+        {"id": user_id},
+        {"$set": {"archived": True, "updated_at": datetime.now(timezone.utc).isoformat()}}
+    )
+    
+    return {"message": "Usuário arquivado com sucesso", "user_id": user_id}
+
+@api_router.patch("/users/{user_id}/unarchive")
+async def unarchive_user(user_id: str, current_user: User = Depends(require_admin)):
+    """Admin desarquiva usuário"""
+    user = await db.users.find_one({"id": user_id}, {"_id": 0})
+    if not user:
+        raise HTTPException(status_code=404, detail="Usuário não encontrado")
+    
+    if not user.get("archived", False):
+        raise HTTPException(status_code=400, detail="Usuário não está arquivado")
+    
+    await db.users.update_one(
+        {"id": user_id},
+        {"$set": {"archived": False, "updated_at": datetime.now(timezone.utc).isoformat()}}
+    )
+    
+    return {"message": "Usuário desarquivado com sucesso", "user_id": user_id}
+
+@api_router.delete("/users/{user_id}")
+async def delete_user(user_id: str, current_user: User = Depends(require_admin)):
+    """Admin exclui usuário permanentemente (delete)"""
+    user = await db.users.find_one({"id": user_id}, {"_id": 0})
+    if not user:
+        raise HTTPException(status_code=404, detail="Usuário não encontrado")
+    
+    # Não permitir exclusão do próprio admin logado
+    if user_id == current_user.id:
+        raise HTTPException(status_code=400, detail="Você não pode excluir sua própria conta")
+    
+    # Excluir usuário e todos os dados relacionados
+    await db.users.delete_one({"id": user_id})
+    await db.kpis.delete_many({"user_id": user_id})
+    await db.bonus.delete_many({"user_id": user_id})
+    await db.forecast.delete_many({"user_id": user_id})
+    await db.competencias.delete_many({"user_id": user_id})
+    await db.extrato.delete_many({"user_id": user_id})
+    await db.dre.delete_many({"user_id": user_id})
+    
+    return {"message": "Usuário e todos os dados relacionados excluídos permanentemente", "user_id": user_id}
+
+@api_router.get("/users/archived/list")
+async def get_archived_users(current_user: User = Depends(require_admin)):
+    """Admin lista usuários arquivados"""
+    users = await db.users.find({"archived": True}, {"_id": 0, "password": 0}).to_list(1000)
+    return users
+
+
+
 @api_router.get("/kpis/{user_id}/{month}")
 async def get_kpi(user_id: str, month: str, current_user: User = Depends(get_current_user)):
     if current_user.role != UserRole.ADMIN and current_user.id != user_id:
