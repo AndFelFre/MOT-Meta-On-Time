@@ -13,6 +13,8 @@ import DREPage from '@/pages/DREPage';
 import ForecastPage from '@/pages/ForecastPage';
 import CompetenciasPage from '@/pages/CompetenciasPage';
 import AdminPage from '@/pages/AdminPage';
+import UserManagementPage from '@/pages/UserManagementPage';
+import ProfilePage from '@/pages/ProfilePage';
 import '@/App.css';
 
 const PrivateRoute = ({ children }) => {
@@ -97,6 +99,22 @@ function App() {
               element={
                 <PrivateRoute>
                   <CompetenciasPage />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/perfil"
+              element={
+                <PrivateRoute>
+                  <ProfilePage />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/usuarios"
+              element={
+                <PrivateRoute>
+                  <UserManagementPage />
                 </PrivateRoute>
               }
             />
