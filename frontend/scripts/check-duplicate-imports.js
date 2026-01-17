@@ -12,7 +12,7 @@ const path = require('path');
 const { execSync } = require('child_process');
 
 // Configuração
-const SRC_DIR = path.join(__dirname, 'src');
+const SRC_DIR = path.join(__dirname, '..', 'src');
 const EXTENSIONS = ['.js', '.jsx'];
 
 // Cores para terminal
