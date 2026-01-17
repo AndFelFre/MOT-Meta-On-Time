@@ -446,7 +446,7 @@ async def get_forecast(user_id: str, month: str, current_user: User = Depends(ge
     forecast = await db.forecast.find_one({"user_id": user_id, "month": month}, {"_id": 0})
     if not forecast:
         import uuid
-        forecast = {
+        forecast_doc = {
             "id": str(uuid.uuid4()),
             "user_id": user_id,
             "month": month,
@@ -459,7 +459,8 @@ async def get_forecast(user_id: str, month: str, current_user: User = Depends(ge
             "conv_cliente_ativo": 0.0,
             "updated_at": datetime.now(timezone.utc).isoformat()
         }
-        await db.forecast.insert_one(forecast)
+        await db.forecast.insert_one(forecast_doc)
+        forecast = await db.forecast.find_one({"user_id": user_id, "month": month}, {"_id": 0})
     return forecast
 
 @api_router.put("/forecast/{user_id}/{month}")
