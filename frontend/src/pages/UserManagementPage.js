@@ -204,10 +204,10 @@ export default function UserManagementPage() {
     setSelectedUser(null);
   };
 
-  const filteredUsers = (showArchived ? archivedUsers : users).filter((u) =>
-    u.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    u.email.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredUsers = (showArchived ? archivedUsers : users)?.filter((u) =>
+    u.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    u.email?.toLowerCase().includes(searchQuery.toLowerCase())
+  ) || [];
 
   if (currentUser?.role !== 'admin') {
     return (
