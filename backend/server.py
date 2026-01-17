@@ -319,8 +319,18 @@ async def login(credentials: UserLogin):
     if not user or not verify_password(credentials.password, user["password"]):
         raise HTTPException(status_code=401, detail="Credenciais inválidas")
     
+    if user.get("archived", False):
+        raise HTTPException(status_code=403, detail="Usuário arquivado. Contate o administrador.")
+    
     token = create_token(user["id"], user["role"])
-    return {"token": token, "user": {k: v for k, v in user.items() if k != "password"}}
+    user_data = {k: v for k, v in user.items() if k != "password"}
+    
+    return {
+        "token": token,
+        "user": user_data,
+        "first_login": user.get("first_login", False),
+        "temporary_password": user.get("temporary_password", False)
+    }
 
 @api_router.get("/auth/me")
 async def get_me(current_user: User = Depends(get_current_user)):
