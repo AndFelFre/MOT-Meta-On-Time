@@ -39,6 +39,7 @@ function App() {
         <BrowserRouter>
           <Routes>
             <Route path="/login" element={<LoginPage />} />
+            <Route path="/first-login-password-change" element={<FirstLoginPasswordChangePage />} />
             <Route
               path="/dashboard"
               element={
