@@ -63,6 +63,8 @@ class UserCreate(BaseModel):
     base_salary: float = 1570.0
     active_base: int = 159
     time_in_company: int = 0
+    send_welcome_email: bool = False
+    generate_temp_password: bool = False
 
 class UserUpdate(BaseModel):
     name: Optional[str] = None
