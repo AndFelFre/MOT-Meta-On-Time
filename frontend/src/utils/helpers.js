@@ -21,13 +21,19 @@ export const calculateKPIMetrics = (kpi) => {
     farol: novosAtivosAtingimento >= 100 ? 'green' : novosAtivosAtingimento >= 80 ? 'yellow' : 'red'
   });
 
-  const churnAtingimento = kpi.churn_meta > 0 ? (1 - (kpi.churn_realizado / kpi.churn_meta)) * 100 : 0;
-  const churnFinal = Math.max(0, (churnAtingimento / 100) * weights.churn);
+  // Churn: cálculo inverso - quanto menor o churn, melhor
+  // Se realizado < meta: bom (atingimento > 100%)
+  // Se realizado = meta: neutro (atingimento = 100%)
+  // Se realizado > meta: ruim (atingimento < 100%)
+  const churnAtingimento = kpi.churn_meta > 0 
+    ? Math.max(0, ((kpi.churn_meta - kpi.churn_realizado) / kpi.churn_meta) * 100 + 100)
+    : 100;
+  const churnFinal = Math.min((churnAtingimento / 100), 2) * weights.churn;
   metrics.push({
     name: 'Churn',
     meta: `${kpi.churn_meta}%`,
     realizado: `${kpi.churn_realizado}%`,
-    atingimento: Math.max(0, churnAtingimento),
+    atingimento: churnAtingimento,
     peso: weights.churn,
     atingimentoFinal: churnFinal,
     farol: churnAtingimento >= 100 ? 'green' : churnAtingimento >= 80 ? 'yellow' : 'red',
