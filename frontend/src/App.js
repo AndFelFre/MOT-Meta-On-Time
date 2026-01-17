@@ -1,9 +1,11 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from '@/contexts/AuthContext';
+import { ThemeProvider } from '@/contexts/ThemeContext';
 import { Toaster } from '@/components/ui/sonner';
 import LoginPage from '@/pages/LoginPage';
 import DashboardPage from '@/pages/DashboardPage';
+import DashboardPageV2 from '@/pages/DashboardPageV2';
 import BonusPage from '@/pages/BonusPage';
 import CarreiraPage from '@/pages/CarreiraPage';
 import ExtratoPage from '@/pages/ExtratoPage';
@@ -29,79 +31,89 @@ const PrivateRoute = ({ children }) => {
 
 function App() {
   return (
-    <AuthProvider>
-      <BrowserRouter>
-        <Routes>
-          <Route path="/login" element={<LoginPage />} />
-          <Route
-            path="/dashboard"
-            element={
-              <PrivateRoute>
-                <DashboardPage />
-              </PrivateRoute>
-            }
-          />
-          <Route
-            path="/bonus"
-            element={
-              <PrivateRoute>
-                <BonusPage />
-              </PrivateRoute>
-            }
-          />
-          <Route
-            path="/carreira"
-            element={
-              <PrivateRoute>
-                <CarreiraPage />
-              </PrivateRoute>
-            }
-          />
-          <Route
-            path="/extrato"
-            element={
-              <PrivateRoute>
-                <ExtratoPage />
-              </PrivateRoute>
-            }
-          />
-          <Route
-            path="/dre"
-            element={
-              <PrivateRoute>
-                <DREPage />
-              </PrivateRoute>
-            }
-          />
-          <Route
-            path="/forecast"
-            element={
-              <PrivateRoute>
-                <ForecastPage />
-              </PrivateRoute>
-            }
-          />
-          <Route
-            path="/competencias"
-            element={
-              <PrivateRoute>
-                <CompetenciasPage />
-              </PrivateRoute>
-            }
-          />
-          <Route
-            path="/admin"
-            element={
-              <PrivateRoute>
-                <AdminPage />
-              </PrivateRoute>
-            }
-          />
-          <Route path="/" element={<Navigate to="/dashboard" />} />
-        </Routes>
-        <Toaster position="top-right" richColors />
-      </BrowserRouter>
-    </AuthProvider>
+    <ThemeProvider>
+      <AuthProvider>
+        <BrowserRouter>
+          <Routes>
+            <Route path="/login" element={<LoginPage />} />
+            <Route
+              path="/dashboard"
+              element={
+                <PrivateRoute>
+                  <DashboardPageV2 />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/dashboard-classic"
+              element={
+                <PrivateRoute>
+                  <DashboardPage />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/bonus"
+              element={
+                <PrivateRoute>
+                  <BonusPage />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/carreira"
+              element={
+                <PrivateRoute>
+                  <CarreiraPage />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/extrato"
+              element={
+                <PrivateRoute>
+                  <ExtratoPage />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/dre"
+              element={
+                <PrivateRoute>
+                  <DREPage />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/forecast"
+              element={
+                <PrivateRoute>
+                  <ForecastPage />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/competencias"
+              element={
+                <PrivateRoute>
+                  <CompetenciasPage />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/admin"
+              element={
+                <PrivateRoute>
+                  <AdminPage />
+                </PrivateRoute>
+              }
+            />
+            <Route path="/" element={<Navigate to="/dashboard" />} />
+          </Routes>
+          <Toaster position="top-right" richColors />
+        </BrowserRouter>
+      </AuthProvider>
+    </ThemeProvider>
   );
 }
 
