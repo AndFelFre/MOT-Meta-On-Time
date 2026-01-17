@@ -427,7 +427,8 @@ async def create_dre(user_id: str, dre_data: DRECreate, current_user: User = Dep
     }
     
     await db.dre.insert_one(dre_doc)
-    return dre_doc
+    created_dre = await db.dre.find_one({"id": dre_doc["id"]}, {"_id": 0})
+    return created_dre
 
 @api_router.get("/dre/{user_id}")
 async def get_dre_list(user_id: str, current_user: User = Depends(get_current_user)):
