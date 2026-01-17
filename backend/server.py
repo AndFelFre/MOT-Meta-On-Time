@@ -217,6 +217,52 @@ def create_token(user_id: str, role: str) -> str:
     }
     return jwt.encode(payload, JWT_SECRET, algorithm=JWT_ALGORITHM)
 
+
+def generate_temporary_password(length: int = 12) -> str:
+    """Gera senha temporária aleatória"""
+    import secrets
+    import string
+    alphabet = string.ascii_letters + string.digits + "!@#$%&"
+    return ''.join(secrets.choice(alphabet) for _ in range(length))
+
+async def send_welcome_email(user_name: str, user_email: str, password: str, is_temp: bool = False):
+    """Mock de envio de email de boas-vindas"""
+    # Em produção, integrar com SendGrid/AWS SES/Resend
+    email_template = f"""
+    🎉 Bem-vindo(a) ao MOT - Meta On Time!
+    
+    Olá {user_name},
+    
+    Sua conta foi criada com sucesso no sistema MOT.
+    
+    📧 Email: {user_email}
+    🔑 Senha {'temporária' if is_temp else ''}: {password}
+    🔗 Acesse: http://localhost:3000/login
+    
+    {'⚠️ IMPORTANTE: Você será solicitado a alterar sua senha no primeiro acesso.' if is_temp else ''}
+    
+    Após o login, você terá acesso a:
+    ✓ Dashboard de metas e performance
+    ✓ Sistema de bonificação
+    ✓ Plano de carreira
+    ✓ Forecast e competências
+    
+    Qualquer dúvida, entre em contato com o administrador.
+    
+    Atenciosamente,
+    Equipe MOT
+    """
+    
+    # Log para desenvolvimento (em produção, enviar email real)
+    print(f"\n{'='*60}")
+    print(f"📧 EMAIL DE BOAS-VINDAS ENVIADO")
+    print(f"{'='*60}")
+    print(email_template)
+    print(f"{'='*60}\n")
+    
+    return {"status": "sent", "to": user_email, "template": email_template}
+
+
 async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
     try:
         token = credentials.credentials
