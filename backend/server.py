@@ -221,18 +221,20 @@ async def register(user_data: UserCreate):
         "name": user_data.name,
         "email": user_data.email,
         "password": hashed_pw,
-        "role": user_data.role,
-        "career_level": CareerLevel.RECRUTA,
+        "role": user_data.role.value if hasattr(user_data.role, 'value') else user_data.role,
+        "career_level": CareerLevel.RECRUTA.value,
         "base_salary": 1570.0,
         "active_base": 159,
         "time_in_company": 0,
         "created_at": datetime.now(timezone.utc).isoformat()
     }
     
-    await db.users.insert_one(user_doc)
-    token = create_token(user_id, user_data.role)
+    result = await db.users.insert_one(user_doc)
+    token = create_token(user_id, user_doc["role"])
     
-    return {"token": token, "user": {k: v for k, v in user_doc.items() if k != "password"}}
+    user_response = {k: v for k, v in user_doc.items() if k != "password" and k != "_id"}
+    
+    return {"token": token, "user": user_response}
 
 @api_router.post("/auth/login")
 async def login(credentials: UserLogin):
