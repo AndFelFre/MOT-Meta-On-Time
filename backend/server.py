@@ -268,8 +268,10 @@ async def get_me(current_user: User = Depends(get_current_user)):
     return current_user
 
 @api_router.get("/users")
-async def get_users(current_user: User = Depends(require_admin)):
-    users = await db.users.find({}, {"_id": 0, "password": 0}).to_list(1000)
+async def get_users(include_archived: bool = False, current_user: User = Depends(require_admin)):
+    """Admin lista usuários ativos (ou todos se include_archived=true)"""
+    query = {} if include_archived else {"archived": {"$ne": True}}
+    users = await db.users.find(query, {"_id": 0, "password": 0}).to_list(1000)
     return users
 
 @api_router.get("/users/{user_id}")
