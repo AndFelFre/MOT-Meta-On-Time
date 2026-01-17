@@ -48,7 +48,9 @@ class User(BaseModel):
     base_salary: float = 1570.0
     active_base: int = 159
     time_in_company: int = 0
+    archived: bool = False
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: Optional[datetime] = None
 
 class UserCreate(BaseModel):
     name: str
