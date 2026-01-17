@@ -39,6 +39,11 @@ import {
 import { useAuth } from '@/contexts/AuthContext';
 import api from '@/utils/api';
 import { toast } from 'sonner';
+import {
+  FormControlLabel,
+  Checkbox,
+  Divider,
+} from '@mui/material';
 
 const careerLevels = ['Recruta', 'Aspirante', 'Consultor', 'Senior', 'Master'];
 const roles = ['admin', 'agent'];
