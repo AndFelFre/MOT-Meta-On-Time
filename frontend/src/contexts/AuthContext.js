@@ -43,12 +43,16 @@ export const AuthProvider = ({ children }) => {
   const login = async (email, password) => {
     try {
       const response = await axios.post(`${API}/auth/login`, { email, password });
-      const { token, user } = response.data;
+      const { token, user, first_login, temporary_password } = response.data;
       localStorage.setItem('mot_token', token);
       setToken(token);
       setUser(user);
       axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-      return { success: true };
+      return { 
+        success: true, 
+        first_login, 
+        temporary_password 
+      };
     } catch (error) {
       return { success: false, error: error.response?.data?.detail || 'Erro ao fazer login' };
     }
