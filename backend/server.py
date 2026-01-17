@@ -339,6 +339,10 @@ async def get_me(current_user: User = Depends(get_current_user)):
 @api_router.get("/users")
 async def get_users(include_archived: bool = False, current_user: User = Depends(require_admin)):
     """Admin lista usuários ativos (ou todos se include_archived=true)"""
+    query = {} if include_archived else {"archived": {"$ne": True}}
+    cursor = db.users.find(query, {"_id": 0, "password": 0})
+    users = await cursor.to_list(length=1000)
+    return users if users else []
 
 
 @api_router.post("/auth/first-login-password-change")
