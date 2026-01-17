@@ -30,6 +30,8 @@ export const DashboardLayout = ({ children }) => {
     { path: '/dre', icon: BarChart3, label: 'DRE', roles: ['admin', 'agent'] },
     { path: '/forecast', icon: Target, label: 'Forecast', roles: ['admin', 'agent'] },
     { path: '/competencias', icon: Award, label: 'Competências', roles: ['admin', 'agent'] },
+    { path: '/perfil', icon: Users, label: 'Meu Perfil', roles: ['admin', 'agent'] },
+    { path: '/usuarios', icon: Users, label: 'Gerenciar Usuários', roles: ['admin'] },
     { path: '/admin', icon: Users, label: 'Administração', roles: ['admin'] },
   ];
 
