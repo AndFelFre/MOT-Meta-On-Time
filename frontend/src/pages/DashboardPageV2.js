@@ -12,6 +12,9 @@ import {
   Chip,
   CircularProgress,
   Fade,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
 } from '@mui/material';
 import {
   Brightness4 as DarkModeIcon,
@@ -20,6 +23,10 @@ import {
   AttachMoney,
   EmojiEvents,
   Refresh,
+  ExpandMore as ExpandMoreIcon,
+  Assessment as AssessmentIcon,
+  ShowChart as ChartIcon,
+  AccountBalance as AccountIcon,
 } from '@mui/icons-material';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
