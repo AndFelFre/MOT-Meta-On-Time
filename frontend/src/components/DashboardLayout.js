@@ -13,7 +13,11 @@ import {
   Users,
   LogOut,
   Menu,
-  X
+  X,
+  Settings,
+  UserCog,
+  Trophy,
+  Briefcase
 } from 'lucide-react';
 
 export const DashboardLayout = ({ children }) => {
