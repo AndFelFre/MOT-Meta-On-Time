@@ -322,6 +322,67 @@ export default function ProfilePage() {
                 </Typography>
               </Paper>
             )}
+
+            {/* Próximo Nível de Carreira */}
+            {nextLevel && userData.role !== 'admin' && (
+              <Paper sx={{ p: 3, mt: 3 }}>
+                <Box display="flex" alignItems="center" gap={1} mb={2}>
+                  <TrophyIcon color="primary" />
+                  <Typography variant="h6" fontWeight={700}>
+                    Próximo Nível: {nextLevel.level}
+                  </Typography>
+                  {nextLevel.eligible && (
+                    <Chip label="Elegível!" color="success" size="small" />
+                  )}
+                </Box>
+
+                <Box mb={2}>
+                  <Box display="flex" justifyContent="space-between" mb={0.5}>
+                    <Typography variant="body2" color="text.secondary">
+                      TPV Carteira
+                    </Typography>
+                    <Typography variant="body2" fontWeight={600}>
+                      {nextLevel.tpvProgress.toFixed(0)}%
+                    </Typography>
+                  </Box>
+                  <LinearProgress
+                    variant="determinate"
+                    value={nextLevel.tpvProgress}
+                    color={nextLevel.tpvProgress >= 100 ? 'success' : 'primary'}
+                    sx={{ height: 8, borderRadius: 4 }}
+                  />
+                  <Typography variant="caption" color="text.secondary">
+                    Meta: R$ {nextLevel.tpv_min?.toLocaleString('pt-BR')}
+                  </Typography>
+                </Box>
+
+                <Box>
+                  <Box display="flex" justifyContent="space-between" mb={0.5}>
+                    <Typography variant="body2" color="text.secondary">
+                      Tempo na Empresa
+                    </Typography>
+                    <Typography variant="body2" fontWeight={600}>
+                      {nextLevel.timeProgress.toFixed(0)}%
+                    </Typography>
+                  </Box>
+                  <LinearProgress
+                    variant="determinate"
+                    value={nextLevel.timeProgress}
+                    color={nextLevel.timeProgress >= 100 ? 'success' : 'primary'}
+                    sx={{ height: 8, borderRadius: 4 }}
+                  />
+                  <Typography variant="caption" color="text.secondary">
+                    Meta: {nextLevel.time_min} meses
+                  </Typography>
+                </Box>
+
+                {nextLevel.eligible && (
+                  <Alert severity="success" sx={{ mt: 2 }}>
+                    🎉 Você atingiu os requisitos! Solicite sua promoção ao gestor.
+                  </Alert>
+                )}
+              </Paper>
+            )}
           </Grid>
         </Grid>
       </Box>
