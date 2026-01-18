@@ -125,6 +125,14 @@ function App() {
               path="/admin"
               element={
                 <PrivateRoute>
+                  <AdminDashboardPage />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/admin-legacy"
+              element={
+                <PrivateRoute>
                   <AdminPage />
                 </PrivateRoute>
               }
