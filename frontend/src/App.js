@@ -139,6 +139,22 @@ function App() {
                 </PrivateRoute>
               }
             />
+            <Route
+              path="/gamificacao"
+              element={
+                <PrivateRoute>
+                  <GamificationPage />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/carreira-config"
+              element={
+                <PrivateRoute>
+                  <CareerConfigPage />
+                </PrivateRoute>
+              }
+            />
             <Route path="/" element={<Navigate to="/dashboard" />} />
           </Routes>
           <Toaster position="top-right" richColors />
