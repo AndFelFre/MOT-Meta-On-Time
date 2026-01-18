@@ -945,7 +945,7 @@ async def get_user_gamification(user_id: str, current_user: User = Depends(get_c
             "created_at": datetime.now(timezone.utc).isoformat()
         }
         await db.gamification.insert_one(gamification)
-        del gamification["_id"] if "_id" in gamification else None
+        gamification.pop("_id", None)
     
     return gamification
 
