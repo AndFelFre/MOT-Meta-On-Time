@@ -17,6 +17,8 @@ import AdminPage from '@/pages/AdminPage';
 import AdminDashboardPage from '@/pages/AdminDashboardPage';
 import UserManagementPage from '@/pages/UserManagementPage';
 import ProfilePage from '@/pages/ProfilePage';
+import GamificationPage from '@/pages/GamificationPage';
+import CareerConfigPage from '@/pages/CareerConfigPage';
 import '@/App.css';
 
 const PrivateRoute = ({ children }) => {
