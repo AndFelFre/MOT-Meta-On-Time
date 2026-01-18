@@ -12,6 +12,8 @@ import {
   ListItem,
   ListItemIcon,
   ListItemText,
+  Alert,
+  LinearProgress,
 } from '@mui/material';
 import {
   Person as PersonIcon,
@@ -21,18 +23,23 @@ import {
   AttachMoney as MoneyIcon,
   CalendarToday as CalendarIcon,
   Badge as BadgeIcon,
+  EmojiEvents as TrophyIcon,
 } from '@mui/icons-material';
 import { useAuth } from '@/contexts/AuthContext';
 import api from '@/utils/api';
+import { toast } from 'sonner';
 
 export default function ProfilePage() {
   const { user } = useAuth();
   const [userData, setUserData] = useState(null);
+  const [careerLevels, setCareerLevels] = useState([]);
+  const [nextLevel, setNextLevel] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (user) {
       fetchUserData();
+      fetchCareerLevels();
     }
   }, [user]);
 
@@ -44,6 +51,55 @@ export default function ProfilePage() {
       console.error('Error fetching user data:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchCareerLevels = async () => {
+    try {
+      const response = await api.get('/career-levels');
+      setCareerLevels(response.data || []);
+    } catch (error) {
+      console.error('Error fetching career levels:', error);
+    }
+  };
+
+  // Hook: Auto-check e sugere próximo nível de carreira
+  useEffect(() => {
+    if (userData && careerLevels.length > 0) {
+      checkCareerProgression();
+    }
+  }, [userData, careerLevels]);
+
+  const checkCareerProgression = () => {
+    const currentLevelIndex = careerLevels.findIndex(
+      (l) => l.level === userData?.career_level
+    );
+    
+    if (currentLevelIndex === -1 || currentLevelIndex >= careerLevels.length - 1) {
+      setNextLevel(null);
+      return;
+    }
+
+    const next = careerLevels[currentLevelIndex + 1];
+    const tpvProgress = userData.tpv_carteira 
+      ? Math.min((userData.tpv_carteira / next.tpv_min) * 100, 100)
+      : 0;
+    const timeProgress = userData.time_in_company 
+      ? Math.min((userData.time_in_company / next.time_min) * 100, 100)
+      : 0;
+
+    setNextLevel({
+      ...next,
+      tpvProgress,
+      timeProgress,
+      eligible: tpvProgress >= 100 && timeProgress >= 100,
+    });
+
+    // Auto-notifica se elegível
+    if (tpvProgress >= 100 && timeProgress >= 100 && next.level !== userData?.career_level) {
+      toast.success(`🎉 Parabéns! Você está elegível para ${next.level}!`, {
+        duration: 5000,
+      });
     }
   };
 
