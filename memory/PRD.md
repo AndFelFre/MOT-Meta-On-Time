@@ -120,6 +120,15 @@ Ordem: Dashboard > Administração > Gerenciar Usuários > Gamificação > Confi
 
 ## Changelog
 
+### 2026-01-18 (Sessão 3) - PATCHES
+- ✅ **Validação soma de pesos = 100%**: Toast de erro se pesos não somam 1.0
+- ✅ **Menu reorganizado**: Dashboard > Administração > Gamificação > Config. Carreira
+- ✅ **Auto-check carreira no Perfil**: Barra de progresso para próximo nível
+- ✅ **README.md atualizado**: Setup completo, endpoints, configuração
+- ✅ **.env.example**: Documentação de secrets (backend e frontend)
+- ✅ **+9 testes e2e**: weights validation, career progression, data integrity
+- ✅ **Accordion imports**: Dashboard organizado com seções colapsáveis
+
 ### 2026-01-18 (Sessão 2)
 - ✅ Implementado Sistema de Gamificação completo
   - 10 badges com pontos e descrições
