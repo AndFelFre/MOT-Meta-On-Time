@@ -903,6 +903,260 @@ async def get_dashboard(user_id: str, current_user: User = Depends(get_current_u
         "competencias": competencias
     }
 
+# ==================== GAMIFICAÇÃO ====================
+
+BADGE_DEFINITIONS = {
+    "first_sale": {"name": "Primeira Venda", "description": "Conquistou seu primeiro cliente", "icon": "🎯", "points": 50},
+    "goal_crusher": {"name": "Batedor de Metas", "description": "Atingiu 100% das metas mensais", "icon": "🏆", "points": 100},
+    "streak_3": {"name": "Sequência de 3", "description": "3 meses consecutivos acima da meta", "icon": "🔥", "points": 150},
+    "streak_6": {"name": "Sequência de 6", "description": "6 meses consecutivos acima da meta", "icon": "⚡", "points": 300},
+    "low_churn": {"name": "Retentor", "description": "Churn abaixo de 3% por 3 meses", "icon": "💎", "points": 200},
+    "top_tpv": {"name": "Campeão TPV", "description": "Maior TPV do mês", "icon": "👑", "points": 250},
+    "rising_star": {"name": "Estrela Nascente", "description": "Melhor evolução mensal", "icon": "⭐", "points": 100},
+    "team_player": {"name": "Jogador de Equipe", "description": "Ajudou 5 colegas a bater meta", "icon": "🤝", "points": 150},
+    "perfect_month": {"name": "Mês Perfeito", "description": "100% em todos os KPIs", "icon": "💯", "points": 500},
+    "veteran": {"name": "Veterano", "description": "1 ano na empresa com performance excelente", "icon": "🎖️", "points": 300},
+}
+
+@api_router.get("/gamification/badges")
+async def get_all_badges():
+    """Retorna todas as badges disponíveis"""
+    return BADGE_DEFINITIONS
+
+@api_router.get("/gamification/user/{user_id}")
+async def get_user_gamification(user_id: str, current_user: User = Depends(get_current_user)):
+    """Retorna dados de gamificação do usuário"""
+    if current_user.role != UserRole.ADMIN and current_user.id != user_id:
+        raise HTTPException(status_code=403, detail="Acesso negado")
+    
+    gamification = await db.gamification.find_one({"user_id": user_id}, {"_id": 0})
+    
+    if not gamification:
+        import uuid
+        gamification = {
+            "id": str(uuid.uuid4()),
+            "user_id": user_id,
+            "total_points": 0,
+            "badges": [],
+            "weekly_ranking": 0,
+            "monthly_ranking": 0,
+            "streak_months": 0,
+            "achievements": [],
+            "created_at": datetime.now(timezone.utc).isoformat()
+        }
+        await db.gamification.insert_one(gamification)
+        del gamification["_id"] if "_id" in gamification else None
+    
+    return gamification
+
+@api_router.post("/gamification/award-badge/{user_id}")
+async def award_badge(user_id: str, badge_id: str, current_user: User = Depends(require_admin)):
+    """Admin concede badge manualmente a um usuário"""
+    if badge_id not in BADGE_DEFINITIONS:
+        raise HTTPException(status_code=400, detail="Badge não encontrada")
+    
+    badge = BADGE_DEFINITIONS[badge_id]
+    badge_award = {
+        "badge_id": badge_id,
+        "awarded_at": datetime.now(timezone.utc).isoformat(),
+        "awarded_by": current_user.id
+    }
+    
+    await db.gamification.update_one(
+        {"user_id": user_id},
+        {
+            "$push": {"badges": badge_award, "achievements": badge_award},
+            "$inc": {"total_points": badge["points"]}
+        },
+        upsert=True
+    )
+    
+    return {"message": f"Badge '{badge['name']}' concedida!", "points": badge["points"]}
+
+@api_router.get("/gamification/ranking")
+async def get_ranking(period: str = "monthly", current_user: User = Depends(get_current_user)):
+    """Retorna ranking de vendedores"""
+    current_month = datetime.now().strftime("%Y-%m")
+    
+    # Buscar todos os usuários agentes
+    agents = await db.users.find({"role": "agent", "archived": {"$ne": True}}, {"_id": 0, "password": 0}).to_list(1000)
+    
+    ranking_data = []
+    for agent in agents:
+        kpi = await db.kpis.find_one({"user_id": agent["id"], "month": current_month}, {"_id": 0})
+        gamification = await db.gamification.find_one({"user_id": agent["id"]}, {"_id": 0})
+        
+        # Calcular atingimento
+        atingimento = 0
+        if kpi:
+            weights = {"novos_ativos": 0.3, "churn": 0.2, "tpv_m1": 0.2, "ativos_m1": 0.15, "migracao_hunter": 0.15}
+            if kpi.get("novos_ativos", 0) > 0:
+                atingimento += (kpi.get("novos_ativos_realizado", 0) / kpi.get("novos_ativos", 1)) * 100 * weights["novos_ativos"]
+            if kpi.get("churn", 0) > 0:
+                churn_at = max(0, ((kpi.get("churn", 5) - kpi.get("churn_realizado", 0)) / kpi.get("churn", 5) + 1)) * 100
+                atingimento += min(churn_at, 200) * weights["churn"]
+            if kpi.get("tpv_m1", 0) > 0:
+                atingimento += (kpi.get("tpv_m1_realizado", 0) / kpi.get("tpv_m1", 1)) * 100 * weights["tpv_m1"]
+            if kpi.get("ativos_m1", 0) > 0:
+                atingimento += (kpi.get("ativos_m1_realizado", 0) / kpi.get("ativos_m1", 1)) * 100 * weights["ativos_m1"]
+            if kpi.get("migracao_hunter", 0) > 0:
+                atingimento += (kpi.get("migracao_hunter_realizado", 0) / kpi.get("migracao_hunter", 1)) * 100 * weights["migracao_hunter"]
+        
+        ranking_data.append({
+            "user_id": agent["id"],
+            "name": agent["name"],
+            "career_level": agent.get("career_level", "Recruta"),
+            "atingimento": round(atingimento, 1),
+            "total_points": gamification.get("total_points", 0) if gamification else 0,
+            "badges_count": len(gamification.get("badges", [])) if gamification else 0,
+            "streak_months": gamification.get("streak_months", 0) if gamification else 0,
+        })
+    
+    # Ordenar por atingimento
+    ranking_data.sort(key=lambda x: x["atingimento"], reverse=True)
+    
+    # Adicionar posição
+    for i, item in enumerate(ranking_data):
+        item["position"] = i + 1
+    
+    return ranking_data
+
+@api_router.get("/gamification/leaderboard/weekly")
+async def get_weekly_leaderboard(current_user: User = Depends(get_current_user)):
+    """Retorna leaderboard semanal"""
+    return await get_ranking("weekly", current_user)
+
+# ==================== PLANO DE CARREIRA (ADMIN) ====================
+
+CAREER_LEVELS_DEFAULT = [
+    {
+        "id": "recruta",
+        "level": "Recruta",
+        "order": 1,
+        "requirements": "Entrada na empresa",
+        "tpv_min": 0,
+        "time_min": 0,
+        "bonus_percent": 0,
+        "benefits": "Salário base + comissões",
+        "color": "#6B7280"
+    },
+    {
+        "id": "aspirante",
+        "level": "Aspirante",
+        "order": 2,
+        "requirements": "TPV Carteira ≥ R$ 50k + 3 meses",
+        "tpv_min": 50000,
+        "time_min": 3,
+        "bonus_percent": 10,
+        "benefits": "Salário base + comissões + bônus 10%",
+        "color": "#3B82F6"
+    },
+    {
+        "id": "consultor",
+        "level": "Consultor",
+        "order": 3,
+        "requirements": "TPV Carteira ≥ R$ 150k + 6 meses",
+        "tpv_min": 150000,
+        "time_min": 6,
+        "bonus_percent": 15,
+        "benefits": "Salário base + comissões + bônus 15%",
+        "color": "#10B981"
+    },
+    {
+        "id": "senior",
+        "level": "Senior",
+        "order": 4,
+        "requirements": "TPV Carteira ≥ R$ 300k + 12 meses",
+        "tpv_min": 300000,
+        "time_min": 12,
+        "bonus_percent": 20,
+        "benefits": "Salário base + comissões + bônus 20% + participação",
+        "color": "#F59E0B"
+    },
+    {
+        "id": "master",
+        "level": "Master",
+        "order": 5,
+        "requirements": "TPV Carteira ≥ R$ 500k + 18 meses",
+        "tpv_min": 500000,
+        "time_min": 18,
+        "bonus_percent": 25,
+        "benefits": "Salário base + comissões + bônus 25% + participação + carro",
+        "color": "#8B5CF6"
+    }
+]
+
+@api_router.get("/career-levels")
+async def get_career_levels(current_user: User = Depends(get_current_user)):
+    """Retorna configuração de níveis de carreira"""
+    levels = await db.career_levels.find({}, {"_id": 0}).sort("order", 1).to_list(100)
+    
+    if not levels:
+        # Inicializar com valores padrão
+        for level in CAREER_LEVELS_DEFAULT:
+            await db.career_levels.insert_one(level)
+        levels = CAREER_LEVELS_DEFAULT
+    
+    return levels
+
+@api_router.put("/career-levels/{level_id}")
+async def update_career_level(level_id: str, level_data: dict, current_user: User = Depends(require_admin)):
+    """Admin atualiza um nível de carreira"""
+    existing = await db.career_levels.find_one({"id": level_id})
+    if not existing:
+        raise HTTPException(status_code=404, detail="Nível não encontrado")
+    
+    update_data = {
+        "requirements": level_data.get("requirements", existing.get("requirements")),
+        "tpv_min": level_data.get("tpv_min", existing.get("tpv_min")),
+        "time_min": level_data.get("time_min", existing.get("time_min")),
+        "bonus_percent": level_data.get("bonus_percent", existing.get("bonus_percent")),
+        "benefits": level_data.get("benefits", existing.get("benefits")),
+        "color": level_data.get("color", existing.get("color")),
+        "updated_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.career_levels.update_one({"id": level_id}, {"$set": update_data})
+    
+    updated = await db.career_levels.find_one({"id": level_id}, {"_id": 0})
+    return updated
+
+@api_router.post("/career-levels")
+async def create_career_level(level_data: dict, current_user: User = Depends(require_admin)):
+    """Admin cria novo nível de carreira"""
+    import uuid
+    
+    # Obter maior ordem atual
+    max_order = await db.career_levels.find_one(sort=[("order", -1)])
+    new_order = (max_order.get("order", 0) if max_order else 0) + 1
+    
+    new_level = {
+        "id": str(uuid.uuid4()),
+        "level": level_data.get("level"),
+        "order": new_order,
+        "requirements": level_data.get("requirements", ""),
+        "tpv_min": level_data.get("tpv_min", 0),
+        "time_min": level_data.get("time_min", 0),
+        "bonus_percent": level_data.get("bonus_percent", 0),
+        "benefits": level_data.get("benefits", ""),
+        "color": level_data.get("color", "#6B7280"),
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.career_levels.insert_one(new_level)
+    del new_level["_id"] if "_id" in new_level else None
+    
+    return new_level
+
+@api_router.delete("/career-levels/{level_id}")
+async def delete_career_level(level_id: str, current_user: User = Depends(require_admin)):
+    """Admin remove nível de carreira"""
+    result = await db.career_levels.delete_one({"id": level_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Nível não encontrado")
+    
+    return {"message": "Nível removido com sucesso"}
+
 app.include_router(api_router)
 
 app.add_middleware(
