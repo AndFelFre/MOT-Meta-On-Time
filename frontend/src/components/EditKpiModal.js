@@ -216,17 +216,21 @@ export const EditKpiModal = ({ open, onClose, seller, onSave }) => {
               ))}
             </Grid>
             <Divider sx={{ my: 2 }} />
-            <Typography variant="body2" fontWeight={700}>
-              Total:{' '}
-              {(
-                (formData.peso_novos_ativos || 0) +
-                (formData.peso_churn || 0) +
-                (formData.peso_tpv_m1 || 0) +
-                (formData.peso_ativos_m1 || 0) +
-                (formData.peso_migracao_hunter || 0)
-              ).toFixed(2) * 100}
-              %
-            </Typography>
+            <Box display="flex" justifyContent="space-between" alignItems="center">
+              <Typography 
+                variant="body2" 
+                fontWeight={700}
+                color={pesosValidos ? 'success.main' : 'error.main'}
+              >
+                Total: {(totalPesos * 100).toFixed(0)}%
+                {pesosValidos ? ' ✓' : ' ⚠️'}
+              </Typography>
+              {!pesosValidos && (
+                <Typography variant="caption" color="error">
+                  Ajuste os pesos para totalizar 100%
+                </Typography>
+              )}
+            </Box>
           </>
         )}
       </DialogContent>
