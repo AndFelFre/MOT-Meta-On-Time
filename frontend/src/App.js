@@ -14,6 +14,7 @@ import DREPage from '@/pages/DREPage';
 import ForecastPage from '@/pages/ForecastPage';
 import CompetenciasPage from '@/pages/CompetenciasPage';
 import AdminPage from '@/pages/AdminPage';
+import AdminDashboardPage from '@/pages/AdminDashboardPage';
 import UserManagementPage from '@/pages/UserManagementPage';
 import ProfilePage from '@/pages/ProfilePage';
 import '@/App.css';
