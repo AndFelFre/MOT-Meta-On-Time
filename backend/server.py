@@ -1144,7 +1144,7 @@ async def create_career_level(level_data: dict, current_user: User = Depends(req
     }
     
     await db.career_levels.insert_one(new_level)
-    del new_level["_id"] if "_id" in new_level else None
+    new_level.pop("_id", None)
     
     return new_level
 
