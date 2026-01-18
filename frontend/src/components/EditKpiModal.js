@@ -61,7 +61,23 @@ export const EditKpiModal = ({ open, onClose, seller, onSave }) => {
     }));
   };
 
+  // Calcula soma total dos pesos
+  const totalPesos = (
+    (formData.peso_novos_ativos || 0) +
+    (formData.peso_churn || 0) +
+    (formData.peso_tpv_m1 || 0) +
+    (formData.peso_ativos_m1 || 0) +
+    (formData.peso_migracao_hunter || 0)
+  );
+  const pesosValidos = Math.abs(totalPesos - 1) < 0.01; // Tolerância de 1%
+
   const handleSave = async () => {
+    // Validar soma dos pesos = 1 antes de salvar
+    if (editMode === 'peso' && !pesosValidos) {
+      toast.error(`⚠️ A soma dos pesos deve ser 100%! Atual: ${(totalPesos * 100).toFixed(0)}%`);
+      return;
+    }
+    
     try {
       setSaving(true);
       const currentMonth = new Date().toISOString().slice(0, 7);
