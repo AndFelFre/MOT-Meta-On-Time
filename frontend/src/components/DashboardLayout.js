@@ -28,15 +28,16 @@ export const DashboardLayout = ({ children }) => {
 
   const menuItems = [
     { path: '/dashboard', icon: LayoutDashboard, label: 'Dashboard', roles: ['admin', 'agent'] },
+    { path: '/admin', icon: Settings, label: 'Administração', roles: ['admin'] },
+    { path: '/usuarios', icon: UserCog, label: 'Gerenciar Usuários', roles: ['admin'] },
+    { path: '/gamificacao', icon: Trophy, label: 'Gamificação', roles: ['admin'] },
     { path: '/bonus', icon: DollarSign, label: 'Bonificação', roles: ['admin', 'agent'] },
-    { path: '/carreira', icon: TrendingUp, label: 'Plano de Carreira', roles: ['admin', 'agent'] },
+    { path: '/carreira', icon: Briefcase, label: 'Plano de Carreira', roles: ['admin', 'agent'] },
     { path: '/extrato', icon: FileText, label: 'Extrato', roles: ['admin', 'agent'] },
     { path: '/dre', icon: BarChart3, label: 'DRE', roles: ['admin', 'agent'] },
     { path: '/forecast', icon: Target, label: 'Forecast', roles: ['admin', 'agent'] },
     { path: '/competencias', icon: Award, label: 'Competências', roles: ['admin', 'agent'] },
     { path: '/perfil', icon: Users, label: 'Meu Perfil', roles: ['admin', 'agent'] },
-    { path: '/usuarios', icon: Users, label: 'Gerenciar Usuários', roles: ['admin'] },
-    { path: '/admin', icon: Users, label: 'Administração', roles: ['admin'] },
   ];
 
   const filteredMenu = menuItems.filter(item => item.roles.includes(user?.role));
