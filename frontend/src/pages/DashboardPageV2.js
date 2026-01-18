@@ -42,6 +42,7 @@ export default function DashboardPageV2() {
   const [dashboardData, setDashboardData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [expandedAccordion, setExpandedAccordion] = useState('kpis');
 
   useEffect(() => {
     fetchDashboard();
